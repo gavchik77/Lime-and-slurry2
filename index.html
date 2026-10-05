@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lime, Slurry & Fertiliser Farm Planner</title>
+  <style>
+:root{
+  --bg:#f4f7f3;--card:#fff;--ink:#1f2a22;--muted:#68746c;--line:#dce5dd;
+  --green:#315b3a;--green-bg:#e8f3ea;--red:#9a352f;--red-bg:#fae9e7;
+  --amber:#7b5d16;--amber-bg:#fff4d6;--blue:#315f77;--blue-bg:#eaf2f7;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+.wrap{max-width:1160px;margin:0 auto;padding-left:20px;padding-right:20px}
+.hero{background:linear-gradient(135deg,#24472e,#47734f);color:white;padding:48px 0 60px}
+.hero h1{font-size:clamp(2.25rem,5vw,4rem);line-height:1;margin:.22rem 0 .55rem}
+.hero p{max-width:850px;margin-bottom:0}
+.kicker,.stepno{text-transform:uppercase;letter-spacing:.12em;font-size:.76rem;font-weight:850}
+main{margin-top:-27px;padding-bottom:60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;margin-bottom:20px;box-shadow:0 10px 28px rgba(31,54,36,.07)}
+.card h2{margin:.15rem 0 .7rem}.card h3{margin:1.3rem 0 .5rem}
+.hidden{display:none!important}
+.small{font-size:.87rem;color:var(--muted)}
+.score-card{border-top:5px solid var(--blue)}
+.score-heading{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+.score-total{min-width:150px;text-align:center;padding:14px 18px;border:1px solid var(--line);border-radius:14px;background:#f8fbfd}
+.score-total span,.case-grid span,.score-summary span,.silage-rules span{display:block;color:var(--muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.045em}
+.score-total strong{font-size:2rem}
+.score-summary,.case-grid,.silage-rules{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+.case-grid{grid-template-columns:repeat(3,1fr)}
+.score-summary div,.case-grid div,.silage-rules div{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fbfcfb}
+.score-summary strong,.case-grid strong,.silage-rules strong{display:block;font-size:1.08rem;margin-top:3px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.035em}
+.focus-row{background:#f2f8f3}
+.rule-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rule-grid div{border:1px solid var(--line);border-radius:12px;padding:13px;background:#fbfcfb}
+.rule-grid b{display:block;color:var(--green);margin-bottom:4px}
+.rule-grid span{font-size:.9rem}
+.choices{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0}
+button{border:0;border-radius:11px;padding:11px 14px;font:inherit;font-weight:800;cursor:pointer;background:var(--green);color:#fff}
+button.secondary{background:#e9eeea;color:var(--ink)}
+.choices button{background:#f2f5f2;color:var(--ink);border:1px solid var(--line);text-align:left}
+.choices button:hover,.choices button.selected{background:var(--green-bg);border-color:var(--green)}
+.nested{border-top:1px solid var(--line);margin-top:20px;padding-top:5px}
+.formula{background:#f3f7f4;border-left:4px solid var(--green);padding:12px 14px;border-radius:8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin:14px 0}
+.question-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:15px 0}
+.question-grid.three{grid-template-columns:repeat(3,1fr)}
+.question-grid.four{grid-template-columns:repeat(4,1fr)}
+label{font-weight:720;font-size:.92rem}
+input{width:100%;margin-top:6px;border:1px solid #c9d4cb;border-radius:10px;padding:10px 11px;font:inherit;background:white}
+input:focus{outline:3px solid rgba(49,91,58,.13);border-color:var(--green)}
+input.good{border-color:var(--green);background:#fbfffc}
+input.bad{border-color:var(--red);background:#fffafa}
+.field-feedback{display:block;min-height:1.2em;font-size:.8rem;margin-top:4px;color:var(--muted)}
+.field-feedback.good{color:var(--green);font-weight:750}.field-feedback.bad{color:var(--red);font-weight:750}
+.feedback{border-radius:11px;padding:11px 13px;margin-top:10px}
+.feedback.neutral{background:#f0f2f0;color:var(--muted)}
+.feedback.pass{background:var(--green-bg);color:#1d6a3d;font-weight:800}
+.feedback.fail{background:var(--red-bg);color:var(--red);font-weight:800}
+.feedback.warn{background:var(--amber-bg);color:var(--amber);font-weight:800}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.status-pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:.75rem;font-weight:800}
+.status-pill.complete{background:var(--green-bg);color:#1d6a3d}
+.status-pill.incomplete{background:#f0f2f0;color:var(--muted)}
+.summary-list{background:#f7faf7;border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+.summary-list p{margin:.55rem 0}
+.source-card{border-top:4px solid #9aa99c}
+@media(max-width:900px){
+  .rule-grid,.question-grid.four,.case-grid{grid-template-columns:1fr 1fr}
+  .score-heading{flex-direction:column}
+}
+@media(max-width:650px){
+  .score-summary,.rule-grid,.question-grid,.question-grid.three,.question-grid.four,.case-grid,.silage-rules,.choices{grid-template-columns:1fr}
+}
+
+.teaching-note{
+  margin:14px 0;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px 14px;
+  background:#fbfcfb;
+}
+.teaching-note summary{
+  cursor:pointer;
+  font-weight:800;
+}
+.teaching-note .formula{
+  margin-bottom:8px;
+}
+.scenario-box{
+  background:#f7faf7;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px 17px;
+  margin:15px 0;
+}
+.scenario-box p{
+  margin:.35rem 0;
+}
+
+.practice-score-row{
+  background:#eef7ef;
+  border-top:2px solid var(--green);
+}
+.practice-score-row td:first-child{
+  color:var(--green);
+}
+
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Guided farm nutrient-planning exercise · Version 4 · single-file build</p>
+    <h1>Lime, Slurry & Fertiliser Farm Planner</h1>
+    <p>One simplified well-drained dairy-farm case. Students decide what to apply, where, when and how much — then record their marks.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="card score-card">
+    <div class="score-heading">
+      <div>
+        <p class="stepno">Student marks</p>
+        <h2>Progress & attempt record</h2>
+        <p class="small">Fields give live feedback. Press <strong>Mark this attempt</strong> to record an attempt, so ordinary typing is not counted as repeated failure.</p>
+      </div>
+      <div class="score-total"><span>Overall score</span><strong id="overallScore">0%</strong></div>
+    </div>
+
+    <div class="score-summary">
+      <div><span>Attempts</span><strong id="scoreAttempts">0</strong></div>
+      <div><span>Successful</span><strong id="scoreSuccess">0</strong></div>
+      <div><span>Unsuccessful</span><strong id="scoreFail">0</strong></div>
+      <div><span>Lessons completed</span><strong id="scoreCompleted">0 / 7</strong></div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="scoreTable">
+        <thead><tr><th>Exercise</th><th>Attempts</th><th>Successful</th><th>Unsuccessful</th><th>Best</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>1 · Lime requirement</td><td id="s_lesson1_attempts">0</td><td id="s_lesson1_success">0</td><td id="s_lesson1_fail">0</td><td id="s_lesson1_best">—</td><td id="s_lesson1_status"><span class="status-pill incomplete">Not completed</span></td></tr>
+          <tr><td>2 · Lime/slurry timing</td><td id="s_lesson2_attempts">0</td><td id="s_lesson2_success">0</td><td id="s_lesson2_fail">0</td><td id="s_lesson2_best">—</td><td id="s_lesson2_status"><span class="status-pill incomplete">Not completed</span></td></tr>
+          <tr><td>3 · Well-drained spring N plan</td><td id="s_lesson3_attempts">0</td><td id="s_lesson3_success">0</td><td id="s_lesson3_fail">0</td><td id="s_lesson3_best">—</td><td id="s_lesson3_status"><span class="status-pill incomplete">Not completed</span></td></tr>
+          <tr><td>4 · Slurry inventory</td><td id="s_lesson4_attempts">0</td><td id="s_lesson4_success">0</td><td id="s_lesson4_fail">0</td><td id="s_lesson4_best">—</td><td id="s_lesson4_status"><span class="status-pill incomplete">Not completed</span></td></tr>
+          <tr><td>5 · First-cut silage</td><td id="s_lesson5_attempts">0</td><td id="s_lesson5_success">0</td><td id="s_lesson5_fail">0</td><td id="s_lesson5_best">—</td><td id="s_lesson5_status"><span class="status-pill incomplete">Not completed</span></td></tr>
+          <tr><td>6 · Silage timing</td><td id="s_lesson6_attempts">0</td><td id="s_lesson6_success">0</td><td id="s_lesson6_fail">0</td><td id="s_lesson6_best">—</td><td id="s_lesson6_status"><span class="status-pill incomplete">Not completed</span></td></tr>
+          <tr class="practice-score-row"><td><strong>7 · Practice generator</strong></td><td id="s_practice_attempts">0</td><td id="s_practice_success">0</td><td id="s_practice_fail">0</td><td id="s_practice_best">—</td><td id="s_practice_status"><span class="status-pill incomplete">Not completed</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small"><strong>Version 4 check:</strong> the seventh row above is <strong>Practice generator</strong>. It is permanently built into this page.</p>
+
+    <div class="actions">
+      <button id="resetScores" class="secondary">Reset marks</button>
+      <button id="downloadScores" class="secondary">Download marks CSV</button>
+    </div>
+    <p class="small">Scores stay in this browser only. Students can screenshot this table or download the CSV.</p>
+  </section>
+
+  <section class="card case-card">
+    <p class="stepno">The farm case</p>
+    <h2>Well-drained mineral-soil dairy farm</h2>
+
+    <div class="case-grid">
+      <div><span>Total farm</span><strong>40 ha</strong></div>
+      <div><span>Grazing platform</span><strong>32 ha</strong></div>
+      <div><span>1st-cut silage</span><strong>8 ha</strong></div>
+      <div><span>Stock</span><strong>80 dairy cows</strong></div>
+      <div><span>Slurry available</span><strong>1,000 m³</strong></div>
+      <div><span>Slurry</span><strong>Cattle, ~6% DM, LESS</strong></div>
+    </div>
+
+    <p>
+      The slurry store has been measured, so use the <strong>1,000 m³ actual inventory</strong> rather than estimating slurry quantity from cow numbers.
+      The grazing-platform spring plan uses the Teagasc <strong>well-drained</strong> 40% / 15% / 15% / 30% split.
+    </p>
+
+    <h3>Soil-test information</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Block</th><th>Area</th><th>Use</th><th>Soil</th><th>pH / SMP pH</th><th>P</th><th>K</th></tr></thead>
+        <tbody>
+          <tr class="focus-row"><td>Lime block</td><td>8 ha</td><td>Grazing, low spring cover</td><td>Mineral, grass-only</td><td>pH 5.7 / SMP 6.2</td><td>Index 2</td><td>Index 2</td></tr>
+          <tr><td>Other grazing</td><td>24 ha</td><td>Grazing</td><td>Mineral</td><td>pH ≥ 6.3</td><td>Index 3</td><td>Index 3</td></tr>
+          <tr><td>Silage block</td><td>8 ha</td><td>1st-cut, 5 t DM/ha</td><td>Mineral</td><td>pH 6.3</td><td>Index 3</td><td>Index 3</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="small">
+      Simplification: this is a nutrient-planning teaching case, not a full regulatory nutrient-management plan.
+      Chemical-N legal allowances are assumed to have been checked separately.
+    </p>
+  </section>
+
+  <section class="card">
+    <p class="stepno">Reference rules used in this exercise</p>
+    <h2>Teagasc-based rules</h2>
+    <div class="rule-grid">
+      <div><b>Lime</b><span>Grassland mineral-soil target pH ≈ 6.3. Laboratory lime requirement uses SMP/buffer pH.</span></div>
+      <div><b>Lime formula</b><span>LR (t/ha) = (target SMP pH 6.7 − measured SMP pH) × 12.5.</span></div>
+      <div><b>Single lime application</b><span>Do not exceed 7.5 t/ha in one application.</span></div>
+      <div><b>Lime + slurry</b><span>Slurry first → wait about 7 days → lime. Lime first → wait 3 months before slurry. No interval is required with protected urea.</span></div>
+      <div><b>Spring N</b><span>Use the 2025 well-drained-farm 40/15/15/30 grazing-area strategy.</span></div>
+      <div><b>1st-cut silage</b><span>5 t DM/ha crop: 100 kg N/ha in this exercise; apply N at least 6 weeks before cutting.</span></div>
+    </div>
+  </section>
+
+  <section class="card" id="lesson1">
+    <p class="stepno">Lesson 1 · Start with soil</p>
+    <h2>What should you examine first?</h2>
+    <div class="choices">
+      <button data-first="price">Fertiliser price</button>
+      <button data-first="ph">Soil-test pH and lime requirement</button>
+      <button data-first="urea">Protected urea rate</button>
+      <button data-first="bags">Number of fertiliser bags</button>
+    </div>
+    <div id="firstFeedback" class="feedback neutral">Choose the first step in the farm nutrient plan.</div>
+
+    <div id="limeCalc" class="hidden nested">
+      <h3>Calculate lime for the 8 ha lime block</h3>
+      <div class="formula">
+        Lime requirement (t/ha) = (6.7 − SMP pH 6.2) × 12.5
+      </div>
+      <div class="question-grid three">
+        <label>Lime requirement (t/ha)
+          <input id="limeRate" type="number" step="0.01">
+          <span class="field-feedback" id="limeRateFb"></span>
+        </label>
+        <label>Total lime for 8 ha (t)
+          <input id="limeTotal" type="number" step="0.1">
+          <span class="field-feedback" id="limeTotalFb"></span>
+        </label>
+        <label>Can it be applied in one application? (1 = yes, 0 = no)
+          <input id="limeOnePass" type="number" min="0" max="1" step="1">
+          <span class="field-feedback" id="limeOnePassFb"></span>
+        </label>
+      </div>
+      <div id="limeFeedback" class="feedback neutral">Calculate the rate, total tonnage and compare the rate with 7.5 t/ha.</div>
+      <div class="actions"><button id="markLesson1">Mark this attempt</button></div>
+    </div>
+  </section>
+
+  <section class="card hidden" id="lesson2">
+    <p class="stepno">Lesson 2 · Lime timing</p>
+    <h2>This low-pH block also needs early slurry. What order is sensible?</h2>
+
+    <div class="choices" id="timingChoices">
+      <button data-timing="limefirst">Lime first, then slurry next week</button>
+      <button data-timing="slurryfirst">Slurry first, then lime about 7 days later</button>
+      <button data-timing="same">Apply slurry and lime together</button>
+      <button data-timing="skip">Skip lime completely</button>
+    </div>
+    <div id="timingFeedback" class="feedback neutral">Choose the correct sequence.</div>
+
+    <div class="question-grid">
+      <label>If lime is applied first, how long before slurry? (months)
+        <input id="monthsAfterLime" type="number" step="0.1">
+        <span class="field-feedback" id="monthsAfterLimeFb"></span>
+      </label>
+      <label>Protected urea after lime: required waiting interval (days)
+        <input id="protectedWait" type="number" step="1">
+        <span class="field-feedback" id="protectedWaitFb"></span>
+      </label>
+    </div>
+
+    <div class="actions"><button id="markLesson2">Mark this attempt</button></div>
+  </section>
+
+  <section class="card hidden" id="lesson3">
+    <p class="stepno">Lesson 3 · Early spring grazing plan</p>
+    <h2>Split the 32 ha grazing platform</h2>
+    <p>For teaching, apply the 2025 well-drained 40% / 15% / 15% / 30% strategy to the 32 ha grazing platform.</p>
+
+    <div class="question-grid four">
+      <label>1st 40% area (ha)
+        <input id="area40" type="number" step="0.1">
+        <span class="field-feedback" id="area40Fb"></span>
+      </label>
+      <label>1st 15% area (ha)
+        <input id="area15a" type="number" step="0.1">
+        <span class="field-feedback" id="area15aFb"></span>
+      </label>
+      <label>2nd 15% area (ha)
+        <input id="area15b" type="number" step="0.1">
+        <span class="field-feedback" id="area15bFb"></span>
+      </label>
+      <label>Final 30% area (ha)
+        <input id="area30" type="number" step="0.1">
+        <span class="field-feedback" id="area30Fb"></span>
+      </label>
+    </div>
+
+    <h3>Match the spring N programme</h3>
+    <div class="schedule-table table-wrap">
+      <table>
+        <thead><tr><th>Area</th><th>January/February</th><th>February</th><th>March</th><th>Total N by 1 April</th></tr></thead>
+        <tbody>
+          <tr><td>1st 40%</td><td>2,000 gal/ac cattle slurry</td><td>—</td><td>50 kg N/ha protected urea</td><td>70 kg N/ha</td></tr>
+          <tr><td>1st 15%</td><td>—</td><td>2,500 gal/ac slurry after grazing</td><td>50 kg N/ha protected urea</td><td>75 kg N/ha</td></tr>
+          <tr><td>2nd 15%</td><td>—</td><td>29 kg N/ha protected urea + 2,500 gal/ac slurry after grazing</td><td>29 kg N/ha protected urea</td><td>83 kg N/ha</td></tr>
+          <tr><td>Final 30%</td><td>—</td><td>29 kg N/ha protected urea</td><td>50 kg N/ha protected urea</td><td>79 kg N/ha</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="question-grid">
+      <label>Weighted average total N by 1 April (kg N/ha)
+        <input id="avgSpringN" type="number" step="0.1">
+        <span class="field-feedback" id="avgSpringNFb"></span>
+      </label>
+      <label>Total grazing-platform N by 1 April (kg N)
+        <input id="totalSpringN" type="number" step="1">
+        <span class="field-feedback" id="totalSpringNFb"></span>
+      </label>
+    </div>
+
+    <details class="teaching-note" open>
+      <summary>What does “weighted average total N” mean?</summary>
+      <p>
+        Different parts of the grazing platform receive different total N rates by 1 April.
+        Because those parts are different sizes, you should not simply add the four N rates and divide by four.
+      </p>
+      <p>
+        Instead, multiply each N rate by the number of hectares receiving it, add all of the kg N applied,
+        then divide by the whole grazing-platform area.
+      </p>
+      <div class="formula">
+        Weighted average N =
+        [(12.8 × 70) + (4.8 × 75) + (4.8 × 83) + (9.6 × 79)] ÷ 32
+        = 75.4 kg N/ha
+      </div>
+      <p class="small">
+        This tells you the average N application per hectare across the entire 32 ha grazing platform,
+        while still allowing each part of the platform to receive a different N rate.
+      </p>
+    </details>
+
+    <div id="springFeedback" class="feedback neutral">Calculate the areas first, then the weighted N total.</div>
+    <div class="actions"><button id="markLesson3">Mark this attempt</button></div>
+  </section>
+
+  <section class="card hidden" id="lesson4">
+    <p class="stepno">Lesson 4 · Slurry inventory</p>
+    <h2>How much of the 1,000 m³ slurry store is used in early spring?</h2>
+
+    <p class="small">
+      For volume conversion use 1 ha = 2.471 acres and 1 imperial gallon = 4.546 L.
+      The source gives 2,000 and 2,500 gal/ac application rates.
+    </p>
+
+    <div class="formula">
+      m³ slurry = area (ha) × 2.471 × gallons/acre × 4.546 ÷ 1000
+    </div>
+
+    <div class="question-grid three">
+      <label>Slurry on 1st 40% (m³)
+        <input id="slurry40" type="number" step="0.1">
+        <span class="field-feedback" id="slurry40Fb"></span>
+      </label>
+      <label>Slurry on both 15% blocks combined (m³)
+        <input id="slurry15s" type="number" step="0.1">
+        <span class="field-feedback" id="slurry15sFb"></span>
+      </label>
+      <label>Total early-spring slurry (m³)
+        <input id="slurrySpringTotal" type="number" step="0.1">
+        <span class="field-feedback" id="slurrySpringTotalFb"></span>
+      </label>
+      <label>Slurry remaining from 1,000 m³ (m³)
+        <input id="slurryRemaining" type="number" step="0.1">
+        <span class="field-feedback" id="slurryRemainingFb"></span>
+      </label>
+    </div>
+
+    <div id="slurryFeedback" class="feedback neutral">Use the actual farm area and application rates.</div>
+    <div class="actions"><button id="markLesson4">Mark this attempt</button></div>
+  </section>
+
+  <section class="card hidden" id="lesson5">
+    <p class="stepno">Lesson 5 · First-cut silage</p>
+    <h2>Prioritise slurry to the 8 ha silage block</h2>
+
+    <p>
+      The silage block is P Index 3 and K Index 3, with a target yield of <strong>5 t DM/ha</strong>.
+      Use <strong>33 m³/ha (about 3,000 gal/ac)</strong> cattle slurry by LESS.
+    </p>
+
+    <div class="silage-rules">
+      <div><span>Crop N requirement</span><strong>100 kg N/ha</strong></div>
+      <div><span>P requirement</span><strong>20 kg P/ha</strong></div>
+      <div><span>K requirement</span><strong>125 kg K/ha</strong></div>
+      <div><span>Slurry value / m³</span><strong>1.0 N · 0.5 P · 3.5 K kg</strong></div>
+    </div>
+
+    <div class="question-grid three">
+      <label>Slurry needed for 8 ha (m³)
+        <input id="silageSlurry" type="number" step="0.1">
+        <span class="field-feedback" id="silageSlurryFb"></span>
+      </label>
+      <label>N supplied by slurry (kg N/ha)
+        <input id="silageSlurryN" type="number" step="0.1">
+        <span class="field-feedback" id="silageSlurryNFb"></span>
+      </label>
+      <label>Additional N required (kg N/ha)
+        <input id="silageExtraN" type="number" step="0.1">
+        <span class="field-feedback" id="silageExtraNFb"></span>
+      </label>
+      <label>Approx. protected urea + S at 38% N (kg/ha)
+        <input id="silageProduct" type="number" step="1">
+        <span class="field-feedback" id="silageProductFb"></span>
+      </label>
+      <label>Slurry remaining after silage allocation (m³)
+        <input id="slurryFinal" type="number" step="0.1">
+        <span class="field-feedback" id="slurryFinalFb"></span>
+      </label>
+    </div>
+
+    <div id="silageFeedback" class="feedback neutral">
+      On Index 3 soils, Teagasc guidance treats 33 m³/ha good-quality cattle slurry as approximately sufficient for 1st-cut silage P and K; then balance N.
+    </div>
+    <div class="actions"><button id="markLesson5">Mark this attempt</button></div>
+  </section>
+
+  <section class="card hidden" id="lesson6">
+    <p class="stepno">Lesson 6 · Timing first-cut N</p>
+    <h2>When should the silage N be applied?</h2>
+
+    <p>The crop takes up about <strong>2.5 kg N/ha/day</strong>. Apply N at least <strong>6 weeks before cutting</strong>.</p>
+    <div class="question-grid three">
+      <label>Days in 6 weeks
+        <input id="sixWeeksDays" type="number" step="1">
+        <span class="field-feedback" id="sixWeeksDaysFb"></span>
+      </label>
+      <label>N uptake over 40 days (kg N/ha)
+        <input id="uptake40" type="number" step="0.1">
+        <span class="field-feedback" id="uptake40Fb"></span>
+      </label>
+      <label>If cutting 20 May, latest application date (day of May = 8 for 8 April? enter day of April as negative? Use 8)
+        <input id="latestDay" type="number" step="1">
+        <span class="field-feedback" id="latestDayFb"></span>
+      </label>
+    </div>
+
+    <p class="small">For this exercise enter <strong>8</strong> for 8 April (42 days before 20 May).</p>
+    <div id="timingSilageFeedback" class="feedback neutral">Check the six-week interval and uptake rate.</div>
+    <div class="actions"><button id="markLesson6">Mark this attempt</button></div>
+  </section>
+
+  <section class="card hidden" id="summary">
+    <p class="stepno">Farm plan completed</p>
+    <h2>What the student should conclude</h2>
+
+    <div class="summary-list">
+      <p><strong>Lime:</strong> correct the 8 ha acidic block from the soil test, using 6.25 t/ha (50 t total).</p>
+      <p><strong>Sequence:</strong> where early slurry is needed, slurry first, then lime after about 7 days; protected urea does not require a lime interval.</p>
+      <p><strong>Spring grazing:</strong> use the well-drained 40/15/15/30 slurry/protected-urea programme.</p>
+      <p><strong>Slurry:</strong> use measured inventory strategically, prioritising low-cover spring areas and the Index-3 silage block.</p>
+      <p><strong>Silage:</strong> use about 33 m³ slurry/ha and balance remaining N with protected urea + S; apply N at least six weeks before cutting.</p>
+    </div>
+
+    <p class="small">
+      This case is deliberately simplified. Real farm plans must use current soil tests, actual slurry analysis/DM, crop requirements,
+      stocking-rate/legal nutrient allowances, weather/trafficability and current regulations.
+    </p>
+  </section>
+
+
+  <section class="card" id="practice">
+    <p class="stepno">Practice generator</p>
+    <h2>7 · Practice Generator — always available</h2>
+    <p>
+      The app changes the farm size, slurry inventory and lime-test result, but keeps the same
+      <strong>well-drained 40% / 15% / 15% / 30%</strong> spring programme and the same Teagasc-based rules used above.
+    </p>
+
+    <div class="actions">
+      <button id="newPractice">Generate new case</button>
+    </div>
+
+    <div id="practiceCase" class="scenario-box"></div>
+
+    <h3>A. Spring grazing-platform calculation</h3>
+    <div class="question-grid four">
+      <label>1st 40% area (ha)
+        <input id="pArea40" type="number" step="0.1">
+        <span class="field-feedback" id="pArea40Fb"></span>
+      </label>
+      <label>Each 15% area (ha)
+        <input id="pArea15" type="number" step="0.1">
+        <span class="field-feedback" id="pArea15Fb"></span>
+      </label>
+      <label>Final 30% area (ha)
+        <input id="pArea30" type="number" step="0.1">
+        <span class="field-feedback" id="pArea30Fb"></span>
+      </label>
+      <label>Weighted average N by 1 April (kg N/ha)
+        <input id="pWeightedN" type="number" step="0.1">
+        <span class="field-feedback" id="pWeightedNFb"></span>
+      </label>
+    </div>
+
+    <div class="question-grid">
+      <label>Total N across grazing platform by 1 April (kg N)
+        <input id="pTotalN" type="number" step="1">
+        <span class="field-feedback" id="pTotalNFb"></span>
+      </label>
+      <label>Early-spring slurry used (m³)
+        <input id="pSlurryUsed" type="number" step="0.1">
+        <span class="field-feedback" id="pSlurryUsedFb"></span>
+      </label>
+      <label>Slurry remaining (m³)
+        <input id="pSlurryRemaining" type="number" step="0.1">
+        <span class="field-feedback" id="pSlurryRemainingFb"></span>
+      </label>
+    </div>
+
+    <h3>B. Lime calculation</h3>
+    <div class="formula">
+      Lime requirement (t/ha) = (6.7 − measured SMP pH) × 12.5
+    </div>
+    <div class="question-grid">
+      <label>Lime rate (t/ha)
+        <input id="pLimeRate" type="number" step="0.01">
+        <span class="field-feedback" id="pLimeRateFb"></span>
+      </label>
+      <label>Total lime for the practice block (t)
+        <input id="pLimeTotal" type="number" step="0.1">
+        <span class="field-feedback" id="pLimeTotalFb"></span>
+      </label>
+    </div>
+
+    <div id="practiceFeedback" class="feedback neutral">
+      Complete the generated case, then press “Mark this attempt”.
+    </div>
+    <div class="actions">
+      <button id="markPractice">Mark this attempt</button>
+    </div>
+  </section>
+
+  <section class="card source-card">
+    <p class="stepno">Sources used to build this exercise</p>
+    <h2>Teagasc guidance</h2>
+    <p class="small">
+      This training case combines the supplied 2025 Teagasc teaching material with current Teagasc online soil-fertility and liming guidance.
+      Always check the current Teagasc advice and applicable regulations before using a classroom calculation on farm.
+    </p>
+    <ul>
+      <li>Teagasc: Chemical N fertiliser and slurry application guidelines 2025 — well-drained farm.</li>
+      <li>Teagasc: Soil pH / liming and Advice on Liming.</li>
+      <li>Teagasc: Crop management / first-cut grass silage fertilisation.</li>
+    </ul>
+  </section>
+
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const show = id => $(id).classList.remove("hidden");
+const hide = id => $(id).classList.add("hidden");
+const val = id => parseFloat($(id).value);
+const close = (a,b,t) => Number.isFinite(a) && Math.abs(a-b) <= t;
+
+function setFeedback(id,type,text){
+  const e=$(id); e.className=`feedback ${type}`; e.textContent=text;
+}
+function mark(inputId,fbId,ok,text="Correct"){
+  const input=$(inputId),fb=$(fbId);
+  input.classList.remove("good","bad");
+  fb.className="field-feedback";
+  if(!input.value){fb.textContent="";return;}
+  input.classList.add(ok?"good":"bad");
+  fb.classList.add(ok?"good":"bad");
+  fb.textContent=ok?`✓ ${text}`:"Check this value";
+}
+
+// ---------- constants ----------
+const FARM = {
+  totalHa:40,
+  grazingHa:32,
+  silageHa:8,
+  cows:80,
+  slurryM3:1000
+};
+
+const LIME = {
+  targetSMP:6.7,
+  measuredSMP:6.2,
+  blockHa:8,
+  maxSingle:7.5
+};
+LIME.rate=(LIME.targetSMP-LIME.measuredSMP)*12.5; // 6.25
+LIME.total=LIME.rate*LIME.blockHa; // 50
+
+const AREA = {
+  a40:FARM.grazingHa*.40,
+  a15a:FARM.grazingHa*.15,
+  a15b:FARM.grazingHa*.15,
+  a30:FARM.grazingHa*.30
+};
+
+const GAL_TO_M3=0.00454609;
+const ACRES_PER_HA=2.471;
+function slurryM3(areaHa,galPerAcre){
+  return areaHa*ACRES_PER_HA*galPerAcre*GAL_TO_M3;
+}
+const SPRING = {
+  slurry40:slurryM3(AREA.a40,2000),
+  slurry15a:slurryM3(AREA.a15a,2500),
+  slurry15b:slurryM3(AREA.a15b,2500)
+};
+SPRING.slurry15s=SPRING.slurry15a+SPRING.slurry15b;
+SPRING.slurryTotal=SPRING.slurry40+SPRING.slurry15s;
+SPRING.slurryRemaining=FARM.slurryM3-SPRING.slurryTotal;
+
+SPRING.weightedN=(AREA.a40*70 + AREA.a15a*75 + AREA.a15b*83 + AREA.a30*79)/FARM.grazingHa;
+SPRING.totalN=SPRING.weightedN*FARM.grazingHa;
+
+const SILAGE = {
+  slurryRate:33,
+  nPerM3:1.0,
+  pPerM3:.5,
+  kPerM3:3.5,
+  cropN:100,
+  productN:.38
+};
+SILAGE.slurryTotal=SILAGE.slurryRate*FARM.silageHa;
+SILAGE.slurryN=SILAGE.slurryRate*SILAGE.nPerM3;
+SILAGE.extraN=SILAGE.cropN-SILAGE.slurryN;
+SILAGE.product=SILAGE.extraN/SILAGE.productN;
+SILAGE.slurryFinal=SPRING.slurryRemaining-SILAGE.slurryTotal;
+
+// ---------- lesson 1 ----------
+document.querySelectorAll("[data-first]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("[data-first]").forEach(b=>b.classList.remove("selected"));
+    btn.classList.add("selected");
+    if(btn.dataset.first==="ph"){
+      setFeedback("firstFeedback","pass","Correct. Start with recent soil tests and lime requirement; soil pH controls nutrient availability and response to fertiliser.");
+      show("limeCalc");
+    }else{
+      const m={
+        price:"Price matters later; first establish what the soil actually needs.",
+        urea:"Chemical N should not be planned before checking soil fertility and lime.",
+        bags:"Bag numbers come only after nutrient requirements and product rates are known."
+      };
+      setFeedback("firstFeedback","fail",m[btn.dataset.first]);
+    }
+  });
+});
+
+function checkLime(){
+  const a=val("limeRate"),b=val("limeTotal"),c=val("limeOnePass");
+  mark("limeRate","limeRateFb",close(a,LIME.rate,.03));
+  mark("limeTotal","limeTotalFb",close(b,LIME.total,.15));
+  mark("limeOnePass","limeOnePassFb",close(c,1,.01),"Yes — rate is below 7.5 t/ha");
+  if(![a,b,c].every(Number.isFinite))return;
+  const ok=close(a,LIME.rate,.03)&&close(b,LIME.total,.15)&&close(c,1,.01);
+  if(ok){
+    setFeedback("limeFeedback","pass","Correct. Lime requirement = 6.25 t/ha; over 8 ha this is 50 t. Because 6.25 < 7.5 t/ha, it can be applied in one application.");
+    show("lesson2");
+  }else{
+    setFeedback("limeFeedback","fail","Use (6.7 − 6.2) × 12.5, multiply by 8 ha, then compare the per-ha rate with 7.5 t/ha.");
+    ["lesson2","lesson3","lesson4","lesson5","lesson6","summary"].forEach(hide);
+  }
+}
+["limeRate","limeTotal","limeOnePass"].forEach(id=>$(id).addEventListener("input",checkLime));
+
+// ---------- lesson 2 ----------
+let timingChoice="";
+document.querySelectorAll("[data-timing]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    timingChoice=btn.dataset.timing;
+    document.querySelectorAll("[data-timing]").forEach(b=>b.classList.toggle("selected",b===btn));
+    if(timingChoice==="slurryfirst"){
+      setFeedback("timingFeedback","pass","Correct. Where early slurry is required, apply slurry first and lime about 7 days later. Protected urea does not require a lime interval.");
+    }else{
+      setFeedback("timingFeedback","fail","Fresh lime can increase loss of ammoniacal N from slurry. In this case slurry first, then lime after about 7 days, is the sensible sequence.");
+    }
+    checkTiming();
+  });
+});
+function checkTiming(){
+  const a=val("monthsAfterLime"),b=val("protectedWait");
+  mark("monthsAfterLime","monthsAfterLimeFb",close(a,3,.05));
+  mark("protectedWait","protectedWaitFb",close(b,0,.05),"No interval required");
+  if(!Number.isFinite(a)||!Number.isFinite(b))return;
+  if(timingChoice==="slurryfirst"&&close(a,3,.05)&&close(b,0,.05)){
+    show("lesson3");
+  }else{
+    ["lesson3","lesson4","lesson5","lesson6","summary"].forEach(hide);
+  }
+}
+["monthsAfterLime","protectedWait"].forEach(id=>$(id).addEventListener("input",checkTiming));
+
+// ---------- lesson 3 ----------
+function checkSpring(){
+  const a=val("area40"),b=val("area15a"),c=val("area15b"),d=val("area30"),e=val("avgSpringN"),f=val("totalSpringN");
+  mark("area40","area40Fb",close(a,AREA.a40,.05));
+  mark("area15a","area15aFb",close(b,AREA.a15a,.05));
+  mark("area15b","area15bFb",close(c,AREA.a15b,.05));
+  mark("area30","area30Fb",close(d,AREA.a30,.05));
+  mark("avgSpringN","avgSpringNFb",close(e,SPRING.weightedN,.08));
+  mark("totalSpringN","totalSpringNFb",close(f,SPRING.totalN,3));
+  if(![a,b,c,d,e,f].every(Number.isFinite))return;
+  const ok=close(a,AREA.a40,.05)&&close(b,AREA.a15a,.05)&&close(c,AREA.a15b,.05)&&close(d,AREA.a30,.05)&&close(e,SPRING.weightedN,.08)&&close(f,SPRING.totalN,3);
+  if(ok){
+    setFeedback("springFeedback","pass",`Correct. Areas are ${AREA.a40.toFixed(1)}, ${AREA.a15a.toFixed(1)}, ${AREA.a15b.toFixed(1)} and ${AREA.a30.toFixed(1)} ha. The weighted total is ${SPRING.weightedN.toFixed(1)} kg N/ha, or about ${SPRING.totalN.toFixed(0)} kg N across the grazing platform.`);
+    show("lesson4");
+  }else{
+    setFeedback("springFeedback","fail","Calculate each percentage of 32 ha, then weight the four total-N rates (70, 75, 83 and 79 kg N/ha) by area.");
+    ["lesson4","lesson5","lesson6","summary"].forEach(hide);
+  }
+}
+["area40","area15a","area15b","area30","avgSpringN","totalSpringN"].forEach(id=>$(id).addEventListener("input",checkSpring));
+
+// ---------- lesson 4 ----------
+function checkSlurry(){
+  const a=val("slurry40"),b=val("slurry15s"),c=val("slurrySpringTotal"),d=val("slurryRemaining");
+  mark("slurry40","slurry40Fb",close(a,SPRING.slurry40,.7));
+  mark("slurry15s","slurry15sFb",close(b,SPRING.slurry15s,.7));
+  mark("slurrySpringTotal","slurrySpringTotalFb",close(c,SPRING.slurryTotal,1.0));
+  mark("slurryRemaining","slurryRemainingFb",close(d,SPRING.slurryRemaining,1.0));
+  if(![a,b,c,d].every(Number.isFinite))return;
+  const ok=close(a,SPRING.slurry40,.7)&&close(b,SPRING.slurry15s,.7)&&close(c,SPRING.slurryTotal,1)&&close(d,SPRING.slurryRemaining,1);
+  if(ok){
+    setFeedback("slurryFeedback","pass",`Correct. Early spring uses about ${SPRING.slurryTotal.toFixed(0)} m³, leaving about ${SPRING.slurryRemaining.toFixed(0)} m³ from the measured 1,000 m³ inventory.`);
+    show("lesson5");
+  }else{
+    setFeedback("slurryFeedback","fail","Convert ha to acres, multiply by gal/ac, then convert gallons to cubic metres.");
+    ["lesson5","lesson6","summary"].forEach(hide);
+  }
+}
+["slurry40","slurry15s","slurrySpringTotal","slurryRemaining"].forEach(id=>$(id).addEventListener("input",checkSlurry));
+
+// ---------- lesson 5 ----------
+function checkSilage(){
+  const a=val("silageSlurry"),b=val("silageSlurryN"),c=val("silageExtraN"),d=val("silageProduct"),e=val("slurryFinal");
+  mark("silageSlurry","silageSlurryFb",close(a,SILAGE.slurryTotal,.25));
+  mark("silageSlurryN","silageSlurryNFb",close(b,SILAGE.slurryN,.08));
+  mark("silageExtraN","silageExtraNFb",close(c,SILAGE.extraN,.08));
+  mark("silageProduct","silageProductFb",close(d,SILAGE.product,1.2));
+  mark("slurryFinal","slurryFinalFb",close(e,SILAGE.slurryFinal,1.2));
+  if(![a,b,c,d,e].every(Number.isFinite))return;
+  const ok=close(a,SILAGE.slurryTotal,.25)&&close(b,SILAGE.slurryN,.08)&&close(c,SILAGE.extraN,.08)&&close(d,SILAGE.product,1.2)&&close(e,SILAGE.slurryFinal,1.2);
+  if(ok){
+    setFeedback("silageFeedback","pass",`Correct. 8 ha × 33 m³/ha = ${SILAGE.slurryTotal.toFixed(0)} m³ slurry. That supplies about 33 kg N/ha, leaving 67 kg N/ha to supply. At 38% N this is about ${SILAGE.product.toFixed(0)} kg product/ha. About ${SILAGE.slurryFinal.toFixed(0)} m³ slurry remains.`);
+    show("lesson6");
+  }else{
+    setFeedback("silageFeedback","fail","Use 33 m³/ha × 8 ha. At 1 kg available N/m³, slurry supplies 33 kg N/ha; subtract this from 100 kg N/ha, then divide by 0.38.");
+    ["lesson6","summary"].forEach(hide);
+  }
+}
+["silageSlurry","silageSlurryN","silageExtraN","silageProduct","slurryFinal"].forEach(id=>$(id).addEventListener("input",checkSilage));
+
+// ---------- lesson 6 ----------
+function checkSilageTiming(){
+  const a=val("sixWeeksDays"),b=val("uptake40"),c=val("latestDay");
+  mark("sixWeeksDays","sixWeeksDaysFb",close(a,42,.1));
+  mark("uptake40","uptake40Fb",close(b,100,.1));
+  mark("latestDay","latestDayFb",close(c,8,.1),"8 April");
+  if(![a,b,c].every(Number.isFinite))return;
+  const ok=close(a,42,.1)&&close(b,100,.1)&&close(c,8,.1);
+  if(ok){
+    setFeedback("timingSilageFeedback","pass","Correct. Six weeks = 42 days. At 2.5 kg N/ha/day, 40 days corresponds to 100 kg N/ha uptake. For a 20 May cut, 8 April is 42 days earlier.");
+    show("summary");
+  }else{
+    setFeedback("timingSilageFeedback","fail","Six weeks = 42 days; 2.5 × 40 = 100 kg N/ha; count 42 days back from 20 May.");
+    hide("summary");
+  }
+}
+["sixWeeksDays","uptake40","latestDay"].forEach(id=>$(id).addEventListener("input",checkSilageTiming));
+
+
+
+// ---------- practice generator ----------
+let practiceData=null;
+
+function pick(arr){
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function generatePractice(){
+  const grazingHa=pick([24,28,32,36,40]);
+  const slurryStore=pick([900,1000,1100,1200,1300]);
+  const limeBlockHa=pick([4,5,6,8]);
+  const smp=pick([6.1,6.2,6.3]);
+
+  const a40=grazingHa*.40;
+  const a15=grazingHa*.15;
+  const a30=grazingHa*.30;
+
+  const weightedN=(a40*70 + a15*75 + a15*83 + a30*79)/grazingHa;
+  const totalN=weightedN*grazingHa;
+
+  const slurry40=slurryM3(a40,2000);
+  const slurry15s=2*slurryM3(a15,2500);
+  const slurryUsed=slurry40+slurry15s;
+  const slurryRemaining=slurryStore-slurryUsed;
+
+  const limeRate=(6.7-smp)*12.5;
+  const limeTotal=limeRate*limeBlockHa;
+
+  practiceData={
+    grazingHa, slurryStore, limeBlockHa, smp,
+    a40,a15,a30,weightedN,totalN,slurryUsed,slurryRemaining,limeRate,limeTotal
+  };
+
+  $("practiceCase").innerHTML=`
+    <p><strong>Grazing platform:</strong> ${grazingHa} ha</p>
+    <p><strong>Measured cattle-slurry inventory:</strong> ${slurryStore} m³</p>
+    <p><strong>Lime block:</strong> ${limeBlockHa} ha, measured SMP pH ${smp.toFixed(1)}</p>
+    <p><strong>Spring programme:</strong> use the same 40% / 15% / 15% / 30% well-drained strategy.</p>
+  `;
+
+  ["pArea40","pArea15","pArea30","pWeightedN","pTotalN","pSlurryUsed","pSlurryRemaining","pLimeRate","pLimeTotal"].forEach(id=>{
+    $(id).value="";
+    $(id).classList.remove("good","bad");
+  });
+  ["pArea40Fb","pArea15Fb","pArea30Fb","pWeightedNFb","pTotalNFb","pSlurryUsedFb","pSlurryRemainingFb","pLimeRateFb","pLimeTotalFb"].forEach(id=>{
+    $(id).textContent="";
+    $(id).className="field-feedback";
+  });
+  setFeedback("practiceFeedback","neutral","Complete the generated case, then press “Mark this attempt”.");
+}
+
+function checkPracticeLive(){
+  if(!practiceData)return;
+  const p=practiceData;
+
+  mark("pArea40","pArea40Fb",close(val("pArea40"),p.a40,.06));
+  mark("pArea15","pArea15Fb",close(val("pArea15"),p.a15,.06));
+  mark("pArea30","pArea30Fb",close(val("pArea30"),p.a30,.06));
+  mark("pWeightedN","pWeightedNFb",close(val("pWeightedN"),p.weightedN,.08));
+  mark("pTotalN","pTotalNFb",close(val("pTotalN"),p.totalN,3));
+  mark("pSlurryUsed","pSlurryUsedFb",close(val("pSlurryUsed"),p.slurryUsed,1.0));
+  mark("pSlurryRemaining","pSlurryRemainingFb",close(val("pSlurryRemaining"),p.slurryRemaining,1.0));
+  mark("pLimeRate","pLimeRateFb",close(val("pLimeRate"),p.limeRate,.03));
+  mark("pLimeTotal","pLimeTotalFb",close(val("pLimeTotal"),p.limeTotal,.2));
+
+  const ids=["pArea40","pArea15","pArea30","pWeightedN","pTotalN","pSlurryUsed","pSlurryRemaining","pLimeRate","pLimeTotal"];
+  if(ids.every(id=>Number.isFinite(val(id)))){
+    const arr=[
+      close(val("pArea40"),p.a40,.06),
+      close(val("pArea15"),p.a15,.06),
+      close(val("pArea30"),p.a30,.06),
+      close(val("pWeightedN"),p.weightedN,.08),
+      close(val("pTotalN"),p.totalN,3),
+      close(val("pSlurryUsed"),p.slurryUsed,1.0),
+      close(val("pSlurryRemaining"),p.slurryRemaining,1.0),
+      close(val("pLimeRate"),p.limeRate,.03),
+      close(val("pLimeTotal"),p.limeTotal,.2)
+    ];
+    const correct=arr.filter(Boolean).length;
+    setFeedback(
+      "practiceFeedback",
+      correct===arr.length?"pass":"warn",
+      correct===arr.length
+        ? "All calculations are correct. Record the attempt when you are ready."
+        : `${correct} of ${arr.length} parts are currently correct.`
+    );
+  }
+}
+
+$("newPractice").addEventListener("click",generatePractice);
+
+["pArea40","pArea15","pArea30","pWeightedN","pTotalN","pSlurryUsed","pSlurryRemaining","pLimeRate","pLimeTotal"].forEach(id=>{
+  $(id).addEventListener("input",checkPracticeLive);
+});
+
+// ---------- scoring ----------
+const SCORE_KEY="limeFertiliserTutorScoresV1";
+const labels={
+  lesson1:"1 · Lime requirement",
+  lesson2:"2 · Lime/slurry timing",
+  lesson3:"3 · Well-drained spring N plan",
+  lesson4:"4 · Slurry inventory",
+  lesson5:"5 · First-cut silage",
+  lesson6:"6 · Silage timing",
+  practice:"Practice generator"
+};
+function emptyScores(){
+  const o={}; Object.keys(labels).forEach(k=>o[k]={attempts:0,success:0,fail:0,best:0,completed:false}); return o;
+}
+
+function normalizeScores(raw){
+  const base=emptyScores();
+  Object.keys(base).forEach(k=>{
+    if(raw && raw[k]){
+      base[k]={
+        attempts:Number(raw[k].attempts)||0,
+        success:Number(raw[k].success)||0,
+        fail:Number(raw[k].fail)||0,
+        best:Number(raw[k].best)||0,
+        completed:Boolean(raw[k].completed)
+      };
+    }
+  });
+  return base;
+}
+
+function loadScores(){try{return normalizeScores(JSON.parse(localStorage.getItem(SCORE_KEY)||"{}"));}catch(e){return emptyScores();}}
+let scores=loadScores();
+function saveScores(){localStorage.setItem(SCORE_KEY,JSON.stringify(scores));}
+
+function resultFor(key){
+  if(key==="lesson1"){
+    const arr=[close(val("limeRate"),LIME.rate,.03),close(val("limeTotal"),LIME.total,.15),close(val("limeOnePass"),1,.01)];
+    if(["limeRate","limeTotal","limeOnePass"].some(id=>!Number.isFinite(val(id))))return null;
+    return arr;
+  }
+  if(key==="lesson2"){
+    if(!timingChoice||["monthsAfterLime","protectedWait"].some(id=>!Number.isFinite(val(id))))return null;
+    return [timingChoice==="slurryfirst",close(val("monthsAfterLime"),3,.05),close(val("protectedWait"),0,.05)];
+  }
+  if(key==="lesson3"){
+    const ids=["area40","area15a","area15b","area30","avgSpringN","totalSpringN"]; if(ids.some(id=>!Number.isFinite(val(id))))return null;
+    return [close(val("area40"),AREA.a40,.05),close(val("area15a"),AREA.a15a,.05),close(val("area15b"),AREA.a15b,.05),close(val("area30"),AREA.a30,.05),close(val("avgSpringN"),SPRING.weightedN,.08),close(val("totalSpringN"),SPRING.totalN,3)];
+  }
+  if(key==="lesson4"){
+    const ids=["slurry40","slurry15s","slurrySpringTotal","slurryRemaining"]; if(ids.some(id=>!Number.isFinite(val(id))))return null;
+    return [close(val("slurry40"),SPRING.slurry40,.7),close(val("slurry15s"),SPRING.slurry15s,.7),close(val("slurrySpringTotal"),SPRING.slurryTotal,1),close(val("slurryRemaining"),SPRING.slurryRemaining,1)];
+  }
+  if(key==="lesson5"){
+    const ids=["silageSlurry","silageSlurryN","silageExtraN","silageProduct","slurryFinal"]; if(ids.some(id=>!Number.isFinite(val(id))))return null;
+    return [close(val("silageSlurry"),SILAGE.slurryTotal,.25),close(val("silageSlurryN"),SILAGE.slurryN,.08),close(val("silageExtraN"),SILAGE.extraN,.08),close(val("silageProduct"),SILAGE.product,1.2),close(val("slurryFinal"),SILAGE.slurryFinal,1.2)];
+  }
+  if(key==="lesson6"){
+    const ids=["sixWeeksDays","uptake40","latestDay"]; if(ids.some(id=>!Number.isFinite(val(id))))return null;
+    return [close(val("sixWeeksDays"),42,.1),close(val("uptake40"),100,.1),close(val("latestDay"),8,.1)];
+  }
+  if(key==="practice"){
+    if(!practiceData)return null;
+    const ids=["pArea40","pArea15","pArea30","pWeightedN","pTotalN","pSlurryUsed","pSlurryRemaining","pLimeRate","pLimeTotal"];
+    if(ids.some(id=>!Number.isFinite(val(id))))return null;
+    const p=practiceData;
+    return [
+      close(val("pArea40"),p.a40,.06),
+      close(val("pArea15"),p.a15,.06),
+      close(val("pArea30"),p.a30,.06),
+      close(val("pWeightedN"),p.weightedN,.08),
+      close(val("pTotalN"),p.totalN,3),
+      close(val("pSlurryUsed"),p.slurryUsed,1.0),
+      close(val("pSlurryRemaining"),p.slurryRemaining,1.0),
+      close(val("pLimeRate"),p.limeRate,.03),
+      close(val("pLimeTotal"),p.limeTotal,.2)
+    ];
+  }
+  return null;
+}
+function recordAttempt(key){
+  const arr=resultFor(key);
+  if(!arr){alert("Complete all answers in this lesson before marking.");return;}
+  const correct=arr.filter(Boolean).length,total=arr.length,pct=Math.round(correct/total*100),success=correct===total;
+  const s=scores[key]; s.attempts++; if(success){s.success++;s.completed=true;}else{s.fail++;} s.best=Math.max(s.best,pct);
+  saveScores(); renderScores();
+  alert(success?`Marked: ${pct}% — successful.`:`Marked: ${pct}% — ${correct} of ${total} parts correct. Try again.`);
+}
+function renderScores(){
+  let attempts=0,success=0,fail=0,completed=0;
+
+  Object.keys(labels).forEach(k=>{
+    const s=scores[k];
+    attempts+=s.attempts;
+    success+=s.success;
+    fail+=s.fail;
+    if(s.completed)completed++;
+
+    const a=$(`s_${k}_attempts`);
+    const ok=$(`s_${k}_success`);
+    const bad=$(`s_${k}_fail`);
+    const best=$(`s_${k}_best`);
+    const status=$(`s_${k}_status`);
+
+    if(a)a.textContent=s.attempts;
+    if(ok)ok.textContent=s.success;
+    if(bad)bad.textContent=s.fail;
+    if(best)best.textContent=s.attempts ? s.best+"%" : "—";
+    if(status){
+      status.innerHTML=`<span class="status-pill ${s.completed?"complete":"incomplete"}">${s.completed?"Completed":"Not completed"}</span>`;
+    }
+  });
+
+  $("scoreAttempts").textContent=attempts;
+  $("scoreSuccess").textContent=success;
+  $("scoreFail").textContent=fail;
+  $("scoreCompleted").textContent=`${completed} / 7`;
+  $("overallScore").textContent=`${attempts?Math.round(success/attempts*100):0}%`;
+}
+["1","2","3","4","5","6"].forEach(n=>$( "markLesson"+n ).addEventListener("click",()=>recordAttempt("lesson"+n)));
+$("markPractice").addEventListener("click",()=>recordAttempt("practice"));
+$("resetScores").addEventListener("click",()=>{if(confirm("Reset all marks on this browser?")){scores=emptyScores();saveScores();renderScores();}});
+$("downloadScores").addEventListener("click",()=>{
+  const rows=[["Exercise","Attempts","Successful","Unsuccessful","Best","Completed"]];
+  Object.keys(labels).forEach(k=>{const s=scores[k];rows.push([labels[k],s.attempts,s.success,s.fail,s.attempts?s.best+"%":"",s.completed?"Yes":"No"]);});
+  const csv=rows.map(r=>r.map(x=>`"${String(x??"").replaceAll('"','""')}"`).join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="lime-fertiliser-tutor-marks.csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+});
+generatePractice();
+renderScores();
+
+</script>
+</body>
+</html>
